@@ -271,7 +271,9 @@ private:
     HASH_INDEX_T mIndex_;  // index to CAPACITIES
 
     // ADD MORE DATA MEMBERS HERE, AS NECESSARY
-
+    int delete_;
+    int keep_;
+    double alpha_;
 };
 
 // ----------------------------------------------------------------------------
@@ -337,7 +339,7 @@ void HashTable<K,V,Prober,Hash,KEqual>::insert(const ItemType& p)
     
     HASH_INDEX_T h = probe(p.first);
     if (h != npos) {
-        if (table_[h] == true) {
+        if (table_[h]) {
             table_[h]->item.second = p.second;
         } 
         else {
@@ -358,9 +360,9 @@ template<typename K, typename V, typename Prober, typename Hash, typename KEqual
 void HashTable<K,V,Prober,Hash,KEqual>::remove(const KeyType& key)
 {
     HashItem* found = internalFind(key);
-    if (found == true) {
-        delete_++;
+    if (found) {
         keep_--;
+        delete_++;
         found->deleted = true;
     }
 }
@@ -436,7 +438,7 @@ typename HashTable<K,V,Prober,Hash,KEqual>::HashItem* HashTable<K,V,Prober,Hash,
 template<typename K, typename V, typename Prober, typename Hash, typename KEqual>
 void HashTable<K,V,Prober,Hash,KEqual>::resize()
 {
-    if (mIndex_ >= CAPACITIES.size()) {
+    if (mIndex_ > sizeof(CAPACITIES)) {
         throw std::logic_error("Max capacity");
     }
     std::vector<HashItem*> toDelete = std::move(table_);
@@ -471,7 +473,7 @@ HASH_INDEX_T HashTable<K,V,Prober,Hash,KEqual>::probe(const KeyType& key) const
         }
         // fill in the condition for this else if statement which should 
         // return 'loc' if the given key exists at this location
-        else if(kequal_((table_[loc]->item).first), key) {
+        else if(kequal_(key,(table_[loc]->item).first)) {
             return loc;
         }
         loc = prober_.next();
